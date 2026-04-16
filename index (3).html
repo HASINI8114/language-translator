@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Language Translator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0fdf4;
+      min-height: 100vh;
+      padding: 30px 16px;
+      color: #1a1a2e;
+    }
+
+    .wrap { max-width: 900px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 32px; }
+
+    .icon {
+      width: 60px; height: 60px;
+      background: #059669;
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+
+    .icon svg { width: 30px; height: 30px; fill: white; }
+
+    h1 { font-size: 2rem; font-weight: 700; }
+    .subtitle { color: #4b5563; margin-top: 6px; font-size: 0.95rem; }
+
+    .badge {
+      display: inline-block;
+      background: #d1fae5; color: #065f46;
+      border: 1px solid #6ee7b7;
+      border-radius: 20px;
+      font-size: 0.75rem; font-weight: 700;
+      padding: 3px 14px; margin-top: 8px;
+    }
+
+    .info {
+      background: #ecfdf5; border: 1px solid #6ee7b7;
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 0.84rem; color: #065f46;
+      margin-bottom: 20px; line-height: 1.6;
+    }
+
+    .box {
+      background: white; border: 1px solid #d1fae5;
+      border-radius: 14px; overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .lang-bar {
+      display: flex; align-items: center;
+      background: #f0fdf4; border-bottom: 1px solid #d1fae5;
+      padding: 12px 16px; gap: 10px;
+    }
+
+    .lang-bar select {
+      flex: 1; padding: 8px 30px 8px 12px;
+      border: 1px solid #6ee7b7; border-radius: 8px;
+      font-size: 0.875rem; font-family: inherit;
+      color: #1a1a2e; background: white; outline: none;
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+
+    .swap {
+      width: 36px; height: 36px;
+      border: 1px solid #6ee7b7; border-radius: 50%;
+      background: white; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: #059669;
+      transition: background 0.15s, transform 0.25s;
+    }
+
+    .swap:hover { background: #d1fae5; transform: rotate(180deg); }
+    .swap svg { width: 16px; height: 16px; }
+
+    .panels { display: grid; grid-template-columns: 1fr 1px 1fr; }
+    .div { background: #d1fae5; }
+    .panel { padding: 16px; }
+
+    .panel textarea {
+      width: 100%; min-height: 160px;
+      border: none; outline: none;
+      font-size: 0.97rem; font-family: inherit;
+      color: #1a1a2e; background: transparent;
+      resize: none; line-height: 1.7;
+    }
+
+    .panel textarea::placeholder { color: #9ca3af; }
+
+    .out-area {
+      min-height: 160px; font-size: 0.97rem;
+      line-height: 1.7; color: #1a1a2e;
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    .ph { color: #9ca3af; font-style: italic; }
+
+    .foot-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-top: 1px solid #d1fae5;
+    }
+
+    .fp {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 16px;
+    }
+
+    .cc { font-size: 0.76rem; color: #9ca3af; }
+
+    .sb {
+      padding: 4px 12px; font-size: 0.76rem;
+      font-family: inherit; border: 1px solid #6ee7b7;
+      border-radius: 6px; background: white; color: #4b5563;
+      cursor: pointer; transition: background 0.15s;
+    }
+
+    .sb:hover { background: #d1fae5; color: #059669; }
+    .sb.done { background: #d1fae5; color: #065f46; }
+
+    .tbtn {
+      width: 100%; padding: 14px;
+      background: #059669; color: white;
+      border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-bottom: 20px;
+    }
+
+    .tbtn:hover { background: #047857; }
+    .tbtn:active { transform: scale(0.99); }
+
+    .err {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; padding: 12px 14px;
+      font-size: 0.88rem; color: #dc2626;
+      margin-bottom: 14px; display: none;
+    }
+
+    /* Phrase table */
+    .phrases { margin-top: 10px; }
+
+    .ph-title {
+      font-size: 0.78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: #4b5563; margin-bottom: 10px;
+    }
+
+    .ph-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .ph-card {
+      background: white; border: 1px solid #d1fae5;
+      border-radius: 8px; padding: 10px 12px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+
+    .ph-card:hover { border-color: #059669; background: #f0fdf4; }
+
+    .ph-en { font-size: 0.82rem; color: #4b5563; }
+    .ph-tr { font-size: 0.88rem; font-weight: 600; color: #059669; margin-top: 2px; }
+
+    /* History */
+    .hist { margin-top: 24px; }
+    .hist-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .ht { font-size: 0.88rem; font-weight: 600; color: #4b5563; }
+    .hclr { font-size: 0.76rem; color: #9ca3af; background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+    .hclr:hover { background: #f0fdf4; }
+    .h-list { display: flex; flex-direction: column; gap: 8px; }
+    .h-item { background: white; border: 1px solid #d1fae5; border-radius: 8px; padding: 10px 14px; cursor: pointer; transition: border-color 0.15s; }
+    .h-item:hover { border-color: #059669; }
+    .h-langs { font-size: 0.74rem; color: #059669; font-weight: 700; margin-bottom: 3px; }
+    .h-text { font-size: 0.84rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    footer { text-align: center; margin-top: 40px; font-size: 0.76rem; color: #9ca3af; }
+
+    @media (max-width: 580px) {
+      .panels { grid-template-columns: 1fr; }
+      .div { display: none; }
+      .foot-row { grid-template-columns: 1fr; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="icon">
+      <svg viewBox="0 0 24 24"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+    </div>
+    <h1>Language Translator</h1>
+    <p class="subtitle">Translate words and phrases — no internet, no API</p>
+    <div class="badge">No API &bull; Works Offline &bull; 100% Free</div>
+  </header>
+
+  <div class="info">
+    This translator uses a <strong>built-in dictionary</strong> of 300+ common words and phrases across 10 languages — no internet connection or API required. Type a word or short phrase, click Translate, and get instant results. Click any phrase card below to auto-translate it.
+  </div>
+
+  <div class="box">
+    <div class="lang-bar">
+      <select id="src">
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+        <option value="pt">Portuguese</option>
+        <option value="hi">Hindi</option>
+        <option value="ar">Arabic</option>
+        <option value="ja">Japanese</option>
+        <option value="zh">Chinese</option>
+      </select>
+
+      <button class="swap" onclick="swapLangs()" title="Swap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+        </svg>
+      </button>
+
+      <select id="tgt">
+        <option value="es">Spanish</option>
+        <option value="en">English</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="it">Italian</option>
+        <option value="pt">Portuguese</option>
+        <option value="hi">Hindi</option>
+        <option value="ar">Arabic</option>
+        <option value="ja">Japanese</option>
+        <option value="zh">Chinese</option>
+      </select>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <textarea id="inp" placeholder="Type a word or phrase..." oninput="updateCC()"></textarea>
+      </div>
+      <div class="div"></div>
+      <div class="panel">
+        <div class="out-area" id="out"><span class="ph">Translation appears here...</span></div>
+      </div>
+    </div>
+
+    <div class="foot-row">
+      <div class="fp">
+        <span class="cc" id="cc">0 chars</span>
+        <button class="sb" onclick="clearAll()">Clear</button>
+      </div>
+      <div class="fp" style="justify-content:flex-end; gap:8px;">
+        <button class="sb" id="cpBtn" onclick="copyOut()">Copy</button>
+        <button class="sb" onclick="dlOut()">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <button class="tbtn" onclick="doTranslate()">Translate</button>
+
+  <div class="phrases">
+    <div class="ph-title">Common phrases — click to translate</div>
+    <div class="ph-grid" id="phGrid"></div>
+  </div>
+
+  <div class="hist" id="histSec" style="display:none;">
+    <div class="hist-head">
+      <span class="ht">Recent translations</span>
+      <button class="hclr" onclick="clearHist()">Clear</button>
+    </div>
+    <div class="h-list" id="histList"></div>
+  </div>
+
+  <footer>Language Translator &mdash; Built-in Dictionary &mdash; No API Required &mdash; Internship Project</footer>
+</div>
+
+<script>
+// ─── BUILT-IN DICTIONARY ─────────────────────────────────────────
+// Format: dict[langCode][englishKey] = translation
+// All lookups are done via English as the pivot language.
+
+const LANG_NAME = { en:'English', es:'Spanish', fr:'French', de:'German', it:'Italian', pt:'Portuguese', hi:'Hindi', ar:'Arabic', ja:'Japanese', zh:'Chinese' };
+
+const dict = {
+  es: {
+    // Greetings & basics
+    'hello':'hola','hi':'hola','good morning':'buenos días','good afternoon':'buenas tardes',
+    'good evening':'buenas noches','good night':'buenas noches','goodbye':'adiós','bye':'adiós',
+    'yes':'sí','no':'no','please':'por favor','thank you':'gracias','thanks':'gracias',
+    'you\'re welcome':'de nada','sorry':'lo siento','excuse me':'disculpe','help':'ayuda',
+    // People & pronouns
+    'i':'yo','you':'tú','he':'él','she':'ella','we':'nosotros','they':'ellos','my':'mi','your':'tu',
+    'friend':'amigo','family':'familia','mother':'madre','father':'padre','brother':'hermano',
+    'sister':'hermana','son':'hijo','daughter':'hija','baby':'bebé','man':'hombre','woman':'mujer',
+    // Common verbs
+    'i love you':'te quiero','i am':'yo soy','i want':'yo quiero','i need':'necesito',
+    'i have':'yo tengo','i go':'yo voy','i eat':'yo como','i drink':'yo bebo',
+    'i speak':'yo hablo','i understand':'entiendo','i don\'t understand':'no entiendo',
+    'how are you':'¿cómo estás?','what is your name':'¿cómo te llamas?','my name is':'me llamo',
+    'where are you from':'¿de dónde eres?','i am from':'soy de','how much':'¿cuánto?',
+    // Numbers
+    'one':'uno','two':'dos','three':'tres','four':'cuatro','five':'cinco',
+    'six':'seis','seven':'siete','eight':'ocho','nine':'nueve','ten':'diez',
+    // Colors
+    'red':'rojo','blue':'azul','green':'verde','yellow':'amarillo','black':'negro','white':'blanco','orange':'naranja',
+    // Food & drink
+    'water':'agua','food':'comida','bread':'pan','milk':'leche','coffee':'café','tea':'té',
+    'rice':'arroz','chicken':'pollo','fish':'pescado','meat':'carne','fruit':'fruta',
+    'apple':'manzana','banana':'plátano','orange':'naranja',
+    // Places & travel
+    'house':'casa','school':'escuela','hospital':'hospital','hotel':'hotel','airport':'aeropuerto',
+    'bank':'banco','restaurant':'restaurante','street':'calle','city':'ciudad','country':'país',
+    'where is':'¿dónde está?','how do i get to':'¿cómo llego a?',
+    // Time
+    'today':'hoy','tomorrow':'mañana','yesterday':'ayer','now':'ahora','later':'después',
+    'morning':'mañana','afternoon':'tarde','night':'noche','week':'semana','month':'mes','year':'año',
+    // Misc
+    'beautiful':'hermoso','big':'grande','small':'pequeño','new':'nuevo','old':'viejo',
+    'good':'bueno','bad':'malo','happy':'feliz','sad':'triste','hot':'caliente','cold':'frío',
+    'open':'abierto','closed':'cerrado','left':'izquierda','right':'derecha','stop':'parar',
+    'go':'ir','come':'venir','buy':'comprar','sell':'vender','work':'trabajo','money':'dinero',
+    'what':'qué','when':'cuándo','where':'dónde','why':'por qué','who':'quién','how':'cómo',
+  },
+  fr: {
+    'hello':'bonjour','hi':'salut','good morning':'bonjour','good afternoon':'bonjour',
+    'good evening':'bonsoir','good night':'bonne nuit','goodbye':'au revoir','bye':'au revoir',
+    'yes':'oui','no':'non','please':'s\'il vous plaît','thank you':'merci','thanks':'merci',
+    'you\'re welcome':'de rien','sorry':'désolé','excuse me':'excusez-moi','help':'aide',
+    'i':'je','you':'tu','he':'il','she':'elle','we':'nous','they':'ils','my':'mon','your':'votre',
+    'friend':'ami','family':'famille','mother':'mère','father':'père','brother':'frère',
+    'sister':'sœur','son':'fils','daughter':'fille','baby':'bébé','man':'homme','woman':'femme',
+    'i love you':'je t\'aime','i am':'je suis','i want':'je veux','i need':'j\'ai besoin',
+    'i have':'j\'ai','i go':'je vais','i eat':'je mange','i drink':'je bois',
+    'i speak':'je parle','i understand':'je comprends','i don\'t understand':'je ne comprends pas',
+    'how are you':'comment allez-vous?','what is your name':'comment vous appelez-vous?',
+    'my name is':'je m\'appelle','where are you from':'d\'où venez-vous?','i am from':'je viens de',
+    'how much':'combien?',
+    'one':'un','two':'deux','three':'trois','four':'quatre','five':'cinq',
+    'six':'six','seven':'sept','eight':'huit','nine':'neuf','ten':'dix',
+    'red':'rouge','blue':'bleu','green':'vert','yellow':'jaune','black':'noir','white':'blanc','orange':'orange',
+    'water':'eau','food':'nourriture','bread':'pain','milk':'lait','coffee':'café','tea':'thé',
+    'rice':'riz','chicken':'poulet','fish':'poisson','meat':'viande','fruit':'fruit',
+    'apple':'pomme','banana':'banane','orange':'orange',
+    'house':'maison','school':'école','hospital':'hôpital','hotel':'hôtel','airport':'aéroport',
+    'bank':'banque','restaurant':'restaurant','street':'rue','city':'ville','country':'pays',
+    'today':'aujourd\'hui','tomorrow':'demain','yesterday':'hier','now':'maintenant','later':'plus tard',
+    'morning':'matin','afternoon':'après-midi','night':'nuit','week':'semaine','month':'mois','year':'an',
+    'beautiful':'beau','big':'grand','small':'petit','new':'nouveau','old':'vieux',
+    'good':'bon','bad':'mauvais','happy':'heureux','sad':'triste','hot':'chaud','cold':'froid',
+    'open':'ouvert','closed':'fermé','left':'gauche','right':'droite','stop':'arrêter',
+    'go':'aller','come':'venir','buy':'acheter','sell':'vendre','work':'travail','money':'argent',
+    'what':'quoi','when':'quand','where':'où','why':'pourquoi','who':'qui','how':'comment',
+  },
+  de: {
+    'hello':'hallo','hi':'hallo','good morning':'guten morgen','good afternoon':'guten tag',
+    'good evening':'guten abend','good night':'gute nacht','goodbye':'auf wiedersehen','bye':'tschüss',
+    'yes':'ja','no':'nein','please':'bitte','thank you':'danke','thanks':'danke',
+    'you\'re welcome':'bitte','sorry':'es tut mir leid','excuse me':'entschuldigung','help':'hilfe',
+    'i':'ich','you':'du','he':'er','she':'sie','we':'wir','they':'sie','my':'mein','your':'dein',
+    'friend':'freund','family':'familie','mother':'mutter','father':'vater','brother':'bruder',
+    'sister':'schwester','son':'sohn','daughter':'tochter','baby':'baby','man':'mann','woman':'frau',
+    'i love you':'ich liebe dich','i am':'ich bin','i want':'ich möchte','i need':'ich brauche',
+    'i have':'ich habe','i go':'ich gehe','i eat':'ich esse','i drink':'ich trinke',
+    'i speak':'ich spreche','i understand':'ich verstehe','i don\'t understand':'ich verstehe nicht',
+    'how are you':'wie geht es ihnen?','what is your name':'wie heißen sie?',
+    'my name is':'ich heiße','where are you from':'woher kommen sie?','i am from':'ich komme aus',
+    'how much':'wie viel?',
+    'one':'eins','two':'zwei','three':'drei','four':'vier','five':'fünf',
+    'six':'sechs','seven':'sieben','eight':'acht','nine':'neun','ten':'zehn',
+    'red':'rot','blue':'blau','green':'grün','yellow':'gelb','black':'schwarz','white':'weiß','orange':'orange',
+    'water':'wasser','food':'essen','bread':'brot','milk':'milch','coffee':'kaffee','tea':'tee',
+    'rice':'reis','chicken':'hühnchen','fish':'fisch','meat':'fleisch','fruit':'obst',
+    'apple':'apfel','banana':'banane','orange':'orange',
+    'house':'haus','school':'schule','hospital':'krankenhaus','hotel':'hotel','airport':'flughafen',
+    'bank':'bank','restaurant':'restaurant','street':'straße','city':'stadt','country':'land',
+    'today':'heute','tomorrow':'morgen','yesterday':'gestern','now':'jetzt','later':'später',
+    'morning':'morgen','afternoon':'nachmittag','night':'nacht','week':'woche','month':'monat','year':'jahr',
+    'beautiful':'schön','big':'groß','small':'klein','new':'neu','old':'alt',
+    'good':'gut','bad':'schlecht','happy':'glücklich','sad':'traurig','hot':'heiß','cold':'kalt',
+    'open':'offen','closed':'geschlossen','left':'links','right':'rechts','stop':'stopp',
+    'go':'gehen','come':'kommen','buy':'kaufen','sell':'verkaufen','work':'arbeit','money':'geld',
+    'what':'was','when':'wann','where':'wo','why':'warum','who':'wer','how':'wie',
+  },
+  it: {
+    'hello':'ciao','hi':'ciao','good morning':'buongiorno','good afternoon':'buon pomeriggio',
+    'good evening':'buonasera','good night':'buonanotte','goodbye':'arrivederci','bye':'ciao',
+    'yes':'sì','no':'no','please':'per favore','thank you':'grazie','thanks':'grazie',
+    'you\'re welcome':'prego','sorry':'mi dispiace','excuse me':'scusi','help':'aiuto',
+    'i':'io','you':'tu','he':'lui','she':'lei','we':'noi','they':'loro','my':'mio','your':'tuo',
+    'friend':'amico','family':'famiglia','mother':'madre','father':'padre','brother':'fratello',
+    'sister':'sorella','son':'figlio','daughter':'figlia','baby':'bambino','man':'uomo','woman':'donna',
+    'i love you':'ti amo','i am':'sono','i want':'voglio','i need':'ho bisogno di',
+    'i have':'ho','i go':'vado','i eat':'mangio','i drink':'bevo',
+    'i speak':'parlo','i understand':'capisco','i don\'t understand':'non capisco',
+    'how are you':'come stai?','what is your name':'come ti chiami?',
+    'my name is':'mi chiamo','where are you from':'da dove vieni?','how much':'quanto?',
+    'one':'uno','two':'due','three':'tre','four':'quattro','five':'cinque',
+    'six':'sei','seven':'sette','eight':'otto','nine':'nove','ten':'dieci',
+    'red':'rosso','blue':'blu','green':'verde','yellow':'giallo','black':'nero','white':'bianco',
+    'water':'acqua','food':'cibo','bread':'pane','milk':'latte','coffee':'caffè','tea':'tè',
+    'rice':'riso','chicken':'pollo','fish':'pesce','meat':'carne','fruit':'frutta',
+    'apple':'mela','banana':'banana',
+    'house':'casa','school':'scuola','hospital':'ospedale','hotel':'hotel','airport':'aeroporto',
+    'bank':'banca','restaurant':'ristorante','street':'via','city':'città','country':'paese',
+    'today':'oggi','tomorrow':'domani','yesterday':'ieri','now':'adesso','later':'dopo',
+    'morning':'mattina','afternoon':'pomeriggio','night':'notte','week':'settimana','month':'mese','year':'anno',
+    'beautiful':'bello','big':'grande','small':'piccolo','new':'nuovo','old':'vecchio',
+    'good':'buono','bad':'cattivo','happy':'felice','sad':'triste','hot':'caldo','cold':'freddo',
+    'go':'andare','come':'venire','buy':'comprare','sell':'vendere','work':'lavoro','money':'denaro',
+    'what':'cosa','when':'quando','where':'dove','why':'perché','who':'chi','how':'come',
+  },
+  pt: {
+    'hello':'olá','hi':'oi','good morning':'bom dia','good afternoon':'boa tarde',
+    'good evening':'boa noite','good night':'boa noite','goodbye':'adeus','bye':'tchau',
+    'yes':'sim','no':'não','please':'por favor','thank you':'obrigado','thanks':'obrigado',
+    'you\'re welcome':'de nada','sorry':'desculpe','excuse me':'com licença','help':'ajuda',
+    'i':'eu','you':'você','he':'ele','she':'ela','we':'nós','they':'eles',
+    'friend':'amigo','family':'família','mother':'mãe','father':'pai','brother':'irmão',
+    'sister':'irmã','man':'homem','woman':'mulher',
+    'i love you':'eu te amo','i am':'eu sou','i want':'eu quero','i need':'preciso',
+    'how are you':'como vai você?','what is your name':'qual é o seu nome?',
+    'my name is':'meu nome é','how much':'quanto?',
+    'one':'um','two':'dois','three':'três','four':'quatro','five':'cinco',
+    'six':'seis','seven':'sete','eight':'oito','nine':'nove','ten':'dez',
+    'red':'vermelho','blue':'azul','green':'verde','yellow':'amarelo','black':'preto','white':'branco',
+    'water':'água','food':'comida','bread':'pão','milk':'leite','coffee':'café','tea':'chá',
+    'rice':'arroz','chicken':'frango','fish':'peixe','meat':'carne','fruit':'fruta',
+    'apple':'maçã','banana':'banana',
+    'house':'casa','school':'escola','hospital':'hospital','hotel':'hotel','airport':'aeroporto',
+    'bank':'banco','restaurant':'restaurante','city':'cidade','country':'país',
+    'today':'hoje','tomorrow':'amanhã','yesterday':'ontem','now':'agora','later':'depois',
+    'morning':'manhã','afternoon':'tarde','night':'noite','week':'semana','month':'mês','year':'ano',
+    'beautiful':'bonito','big':'grande','small':'pequeno','new':'novo','old':'velho',
+    'good':'bom','bad':'mau','happy':'feliz','sad':'triste','hot':'quente','cold':'frio',
+    'go':'ir','come':'vir','buy':'comprar','sell':'vender','work':'trabalho','money':'dinheiro',
+  },
+  hi: {
+    'hello':'नमस्ते','hi':'नमस्ते','good morning':'शुभ प्रभात','good night':'शुभ रात्रि',
+    'goodbye':'अलविदा','bye':'अलविदा','yes':'हाँ','no':'नहीं',
+    'please':'कृपया','thank you':'धन्यवाद','thanks':'शुक्रिया',
+    'you\'re welcome':'आपका स्वागत है','sorry':'माफ़ करना','help':'मदद',
+    'i love you':'मैं तुमसे प्यार करता हूँ','how are you':'आप कैसे हैं?',
+    'my name is':'मेरा नाम है','what is your name':'आपका नाम क्या है?',
+    'i am':'मैं हूँ','i want':'मैं चाहता हूँ','i need':'मुझे चाहिए',
+    'one':'एक','two':'दो','three':'तीन','four':'चार','five':'पाँच',
+    'six':'छह','seven':'सात','eight':'आठ','nine':'नौ','ten':'दस',
+    'water':'पानी','food':'खाना','bread':'रोटी','milk':'दूध','coffee':'कॉफ़ी','tea':'चाय',
+    'rice':'चावल','chicken':'मुर्गा','fish':'मछली','fruit':'फल','apple':'सेब','banana':'केला',
+    'house':'घर','school':'विद्यालय','hospital':'अस्पताल','hotel':'होटल',
+    'city':'शहर','country':'देश','mother':'माँ','father':'पिता',
+    'beautiful':'सुंदर','big':'बड़ा','small':'छोटा','good':'अच्छा','bad':'बुरा',
+    'happy':'खुश','sad':'दुखी','hot':'गर्म','cold':'ठंडा','money':'पैसे',
+    'today':'आज','tomorrow':'कल','yesterday':'कल','now':'अभी',
+    'morning':'सुबह','night':'रात','what':'क्या','where':'कहाँ','why':'क्यों','how':'कैसे',
+  },
+  ar: {
+    'hello':'مرحبا','hi':'مرحبا','good morning':'صباح الخير','good evening':'مساء الخير',
+    'good night':'تصبح على خير','goodbye':'مع السلامة','bye':'وداعا',
+    'yes':'نعم','no':'لا','please':'من فضلك','thank you':'شكرا','thanks':'شكرا',
+    'you\'re welcome':'عفواً','sorry':'آسف','excuse me':'عذراً','help':'مساعدة',
+    'i love you':'أحبك','how are you':'كيف حالك?','my name is':'اسمي',
+    'what is your name':'ما اسمك?','i am':'أنا','i want':'أريد','i need':'أحتاج',
+    'one':'واحد','two':'اثنان','three':'ثلاثة','four':'أربعة','five':'خمسة',
+    'six':'ستة','seven':'سبعة','eight':'ثمانية','nine':'تسعة','ten':'عشرة',
+    'water':'ماء','food':'طعام','bread':'خبز','milk':'حليب','coffee':'قهوة','tea':'شاي',
+    'rice':'أرز','chicken':'دجاج','fish':'سمك','fruit':'فاكهة','apple':'تفاح','banana':'موز',
+    'house':'بيت','school':'مدرسة','hospital':'مستشفى','hotel':'فندق','airport':'مطار',
+    'city':'مدينة','country':'بلد','mother':'أم','father':'أب',
+    'beautiful':'جميل','big':'كبير','small':'صغير','good':'جيد','bad':'سيئ',
+    'happy':'سعيد','sad':'حزين','hot':'حار','cold':'بارد','money':'مال',
+    'today':'اليوم','tomorrow':'غداً','yesterday':'أمس','now':'الآن',
+    'morning':'صباح','night':'ليل','what':'ماذا','where':'أين','why':'لماذا','how':'كيف',
+  },
+  ja: {
+    'hello':'こんにちは','hi':'やあ','good morning':'おはようございます','good evening':'こんばんは',
+    'good night':'おやすみなさい','goodbye':'さようなら','bye':'またね',
+    'yes':'はい','no':'いいえ','please':'お願いします','thank you':'ありがとう','thanks':'ありがとう',
+    'you\'re welcome':'どういたしまして','sorry':'ごめんなさい','excuse me':'すみません','help':'助けて',
+    'i love you':'愛しています','how are you':'お元気ですか？','my name is':'私の名前は',
+    'what is your name':'お名前は何ですか？','i am':'私は','i want':'私は欲しい','i need':'必要です',
+    'one':'いち','two':'に','three':'さん','four':'よん','five':'ご',
+    'six':'ろく','seven':'なな','eight':'はち','nine':'きゅう','ten':'じゅう',
+    'water':'水','food':'食べ物','bread':'パン','milk':'牛乳','coffee':'コーヒー','tea':'お茶',
+    'rice':'ご飯','chicken':'鶏肉','fish':'魚','fruit':'果物','apple':'りんご','banana':'バナナ',
+    'house':'家','school':'学校','hospital':'病院','hotel':'ホテル','airport':'空港',
+    'city':'都市','country':'国','mother':'お母さん','father':'お父さん',
+    'beautiful':'きれい','big':'大きい','small':'小さい','good':'良い','bad':'悪い',
+    'happy':'幸せ','sad':'悲しい','hot':'暑い','cold':'寒い','money':'お金',
+    'today':'今日','tomorrow':'明日','yesterday':'昨日','now':'今',
+    'morning':'朝','night':'夜','what':'何','where':'どこ','why':'なぜ','how':'どうやって',
+  },
+  zh: {
+    'hello':'你好','hi':'嗨','good morning':'早上好','good afternoon':'下午好',
+    'good evening':'晚上好','good night':'晚安','goodbye':'再见','bye':'拜拜',
+    'yes':'是','no':'不','please':'请','thank you':'谢谢','thanks':'谢了',
+    'you\'re welcome':'不客气','sorry':'对不起','excuse me':'打扰一下','help':'帮助',
+    'i love you':'我爱你','how are you':'你好吗？','my name is':'我叫',
+    'what is your name':'你叫什么名字？','i am':'我是','i want':'我想要','i need':'我需要',
+    'one':'一','two':'二','three':'三','four':'四','five':'五',
+    'six':'六','seven':'七','eight':'八','nine':'九','ten':'十',
+    'water':'水','food':'食物','bread':'面包','milk':'牛奶','coffee':'咖啡','tea':'茶',
+    'rice':'米饭','chicken':'鸡肉','fish':'鱼','fruit':'水果','apple':'苹果','banana':'香蕉',
+    'house':'房子','school':'学校','hospital':'医院','hotel':'酒店','airport':'机场',
+    'city':'城市','country':'国家','mother':'妈妈','father':'爸爸',
+    'beautiful':'美丽','big':'大','small':'小','good':'好','bad':'坏',
+    'happy':'快乐','sad':'悲伤','hot':'热','cold':'冷','money':'钱',
+    'today':'今天','tomorrow':'明天','yesterday':'昨天','now':'现在',
+    'morning':'早晨','night':'晚上','what':'什么','where':'哪里','why':'为什么','how':'怎么',
+  }
+};
+
+// Common phrases to show as clickable cards
+const PHRASES = [
+  'hello','goodbye','thank you','yes','no','please','sorry',
+  'how are you','i love you','good morning','good night','help',
+  'what is your name','my name is','how much','i don\'t understand',
+  'where is','water','food'
+];
+
+// ─── CORE TRANSLATE LOGIC ────────────────────────────────────────
+
+function normalise(s) { return s.toLowerCase().trim().replace(/\s+/g,' ').replace(/[?!,;:]+$/,''); }
+
+function lookupWord(word, fromLang, toLang) {
+  // Build a reverse lookup table for fromLang → English
+  const toEn = {};
+  if (fromLang !== 'en' && dict[fromLang]) {
+    for (const [en, tr] of Object.entries(dict[fromLang])) toEn[tr.toLowerCase()] = en;
+  }
+
+  const w = word.toLowerCase();
+
+  if (toLang === 'en') {
+    // Translating TO English: reverse-lookup from source dict
+    if (fromLang === 'en') return word;
+    return toEn[w] || null;
+  }
+
+  if (fromLang === 'en') {
+    // Direct English → target
+    return dict[toLang] ? (dict[toLang][w] || null) : null;
+  }
+
+  // Non-English → Non-English: pivot through English
+  const english = toEn[w];
+  if (!english) return null;
+  return dict[toLang] ? (dict[toLang][english] || null) : null;
+}
+
+function translateText(text, fromLang, toLang) {
+  if (fromLang === toLang) return text;
+
+  const norm = normalise(text);
+
+  // Try full phrase first
+  const full = lookupWord(norm, fromLang, toLang);
+  if (full) return full;
+
+  // Try without trailing punctuation variations
+  const stripped = norm.replace(/[.?!]+$/, '').trim();
+  const full2 = lookupWord(stripped, fromLang, toLang);
+  if (full2) return full2;
+
+  // Split into words and translate each
+  const words = norm.split(' ');
+  const translated = words.map(w => {
+    const clean = w.replace(/[^a-zA-Z0-9\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u0600-\u06FF\u3040-\u30FF\u4E00-\u9FFF]/g, '');
+    return lookupWord(clean, fromLang, toLang) || clean;
+  });
+
+  // Check if anything was translated
+  const unchanged = translated.every((t, i) => t === words[i]);
+  if (unchanged) return null;
+
+  return translated.join(' ');
+}
+
+// ─── UI LOGIC ────────────────────────────────────────────────────
+
+let history = JSON.parse(localStorage.getItem('tl_hist') || '[]');
+
+function updateCC() {
+  const l = document.getElementById('inp').value.length;
+  document.getElementById('cc').textContent = l + ' chars';
+}
+
+function swapLangs() {
+  const s = document.getElementById('src'), t = document.getElementById('tgt');
+  const tmp = s.value; s.value = t.value; t.value = tmp;
+  const out = document.getElementById('out');
+  const inp = document.getElementById('inp');
+  if (!out.querySelector('.ph') && out.textContent.trim()) {
+    inp.value = out.textContent.trim();
+    out.innerHTML = '<span class="ph">Translation appears here...</span>';
+    updateCC();
+  }
+  renderPhrases();
+}
+
+function clearAll() {
+  document.getElementById('inp').value = '';
+  document.getElementById('out').innerHTML = '<span class="ph">Translation appears here...</span>';
+  document.getElementById('err').style.display = 'none';
+  updateCC();
+}
+
+function showErr(m) { const e = document.getElementById('err'); e.textContent = m; e.style.display = 'block'; }
+function hideErr() { document.getElementById('err').style.display = 'none'; }
+
+function doTranslate() {
+  hideErr();
+  const text = document.getElementById('inp').value.trim();
+  if (!text) { showErr('Please type something to translate.'); return; }
+
+  const src = document.getElementById('src').value;
+  const tgt = document.getElementById('tgt').value;
+  if (src === tgt) { showErr('Source and target languages must be different.'); return; }
+
+  const result = translateText(text, src, tgt);
+
+  if (!result) {
+    showErr('Word/phrase not found in the built-in dictionary. Try a simpler word or check the phrase cards below.');
+    return;
+  }
+
+  document.getElementById('out').textContent = result;
+  addHist(text, result, src, tgt);
+}
+
+function renderPhrases() {
+  const tgt = document.getElementById('tgt').value;
+  const src = document.getElementById('src').value;
+  const grid = document.getElementById('phGrid');
+  grid.innerHTML = PHRASES.map(phrase => {
+    const tr = translateText(phrase, 'en', tgt);
+    if (!tr || tr === phrase) return '';
+    const display = src === 'en' ? phrase : (translateText(phrase, 'en', src) || phrase);
+    return `<div class="ph-card" onclick="usePhraseCard('${phrase.replace(/'/g,"\\'")}')">
+      <div class="ph-en">${display}</div>
+      <div class="ph-tr">${tr}</div>
+    </div>`;
+  }).join('');
+}
+
+function usePhraseCard(phrase) {
+  const src = document.getElementById('src').value;
+  const inp = src === 'en' ? phrase : (translateText(phrase, 'en', src) || phrase);
+  document.getElementById('inp').value = inp;
+  updateCC();
+  doTranslate();
+}
+
+function addHist(input, output, src, tgt) {
+  history.unshift({ input, output, src, tgt });
+  if (history.length > 10) history = history.slice(0, 10);
+  localStorage.setItem('tl_hist', JSON.stringify(history));
+  renderHist();
+}
+
+function renderHist() {
+  const sec = document.getElementById('histSec');
+  const list = document.getElementById('histList');
+  if (!history.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = history.map((h, i) => `
+    <div class="h-item" onclick="loadHist(${i})">
+      <div class="h-langs">${LANG_NAME[h.src]} → ${LANG_NAME[h.tgt]}</div>
+      <div class="h-text">${h.input.substring(0, 80)}${h.input.length > 80 ? '...' : ''}</div>
+    </div>`).join('');
+}
+
+function loadHist(i) {
+  const h = history[i];
+  document.getElementById('inp').value = h.input;
+  document.getElementById('out').textContent = h.output;
+  document.getElementById('src').value = h.src;
+  document.getElementById('tgt').value = h.tgt;
+  updateCC();
+}
+
+function clearHist() {
+  history = []; localStorage.removeItem('tl_hist'); renderHist();
+}
+
+async function copyOut() {
+  const out = document.getElementById('out');
+  if (out.querySelector('.ph')) return;
+  await navigator.clipboard.writeText(out.textContent);
+  const btn = document.getElementById('cpBtn');
+  btn.textContent = 'Copied!'; btn.classList.add('done');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 2000);
+}
+
+function dlOut() {
+  const out = document.getElementById('out');
+  if (out.querySelector('.ph')) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([out.textContent], { type: 'text/plain' }));
+  a.download = 'translation.txt'; a.click();
+}
+
+// Allow pressing Enter to translate
+document.addEventListener('DOMContentLoaded', () => {
+  renderPhrases();
+  renderHist();
+  document.getElementById('src').addEventListener('change', renderPhrases);
+  document.getElementById('tgt').addEventListener('change', renderPhrases);
+  document.getElementById('inp').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doTranslate(); }
+  });
+});
+</script>
+</body>
+</html>
